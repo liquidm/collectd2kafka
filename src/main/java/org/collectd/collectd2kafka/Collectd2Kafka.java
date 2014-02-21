@@ -32,12 +32,16 @@ public class Collectd2Kafka implements CollectdWriteInterface, CollectdInitInter
 	private Logger logger = LoggerFactory.getLogger(Collectd2Kafka.class);
 
 	public Collectd2Kafka() {
+		Collectd.registerConfig(Collectd2Kafka.class.getSimpleName(), this);
 		Collectd.registerInit(Collectd2Kafka.class.getSimpleName(), this);
 		Collectd.registerWrite(Collectd2Kafka.class.getSimpleName(), this);
-		Collectd.registerConfig(Collectd2Kafka.class.getSimpleName(), this);
 	}
 
 	public int init() {
+		System.out.println("registering init...");	
+		Collectd.logInfo("registering init...");
+
+		
 		Properties props = new Properties();
 		props.put("zk.connect", zk_host_port);
 		props.put("serializer.class", "kafka.serializer.StringEncoder");
@@ -47,6 +51,8 @@ public class Collectd2Kafka implements CollectdWriteInterface, CollectdInitInter
 	}
 
 	public int write(ValueList vl) {
+		System.out.println("registering write...");
+		Collectd.logInfo("registering write...");
 
 		List<DataSource> ds = vl.getDataSet().getDataSources();
 		List<Number> values = vl.getValues();
@@ -85,22 +91,12 @@ public class Collectd2Kafka implements CollectdWriteInterface, CollectdInitInter
 
 	}
 
-	public static String join(Collection<String> s, String delimiter) {
-		StringBuffer buffer = new StringBuffer();
-		Iterator<String> iter = s.iterator();
-		while (iter.hasNext()) {
-			buffer.append(iter.next());
-			if (iter.hasNext()) {
-				buffer.append(delimiter);
-			}
-		}
-		return buffer.toString();
-	}
-
+	
 	public int config(OConfigItem ci) {
 
 		
 		System.out.println("registering config...");
+		Collectd.logInfo("registering config...");
 		
 		boolean usingDefaults = true;
 		
