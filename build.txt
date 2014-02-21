@@ -9,7 +9,7 @@ mvn install:install-file \
   -DgeneratePom=true
 
   
- mvn install:install-file \ 
+ mvn install:install-file \
   -Dfile=collectd-api.jar \
   -DgroupId=org.collectd \
   -DartifactId=collectd \
