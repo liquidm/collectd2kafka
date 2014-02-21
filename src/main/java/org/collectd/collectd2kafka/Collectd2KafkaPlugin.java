@@ -37,7 +37,9 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface, CollectdIn
 	public Collectd2KafkaPlugin() {
 		Collectd.registerConfig(Collectd2KafkaPlugin.class.getSimpleName(), this);
 		Collectd.registerInit(Collectd2KafkaPlugin.class.getSimpleName(), this);
+		Collectd.registerRead(Collectd2KafkaPlugin.class.getSimpleName(), this);
 		Collectd.registerWrite(Collectd2KafkaPlugin.class.getSimpleName(), this);
+		Collectd.registerShutdown(Collectd2KafkaPlugin.class.getSimpleName(), this);
 	}
 
 	public int config(OConfigItem ci) {
