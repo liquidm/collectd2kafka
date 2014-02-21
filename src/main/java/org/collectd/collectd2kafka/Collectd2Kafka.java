@@ -32,9 +32,9 @@ public class Collectd2Kafka implements CollectdWriteInterface, CollectdInitInter
 	private Logger logger = LoggerFactory.getLogger(Collectd2Kafka.class);
 
 	public Collectd2Kafka() {
-		Collectd.registerInit("Collectd2Kafka", this);
-		Collectd.registerWrite("Collectd2Kafka", this);
-		Collectd.registerConfig("Collectd2Kafka", this);
+		Collectd.registerInit(Collectd2Kafka.class.getSimpleName(), this);
+		Collectd.registerWrite(Collectd2Kafka.class.getSimpleName(), this);
+		Collectd.registerConfig(Collectd2Kafka.class.getSimpleName(), this);
 	}
 
 	public int init() {
@@ -100,6 +100,8 @@ public class Collectd2Kafka implements CollectdWriteInterface, CollectdInitInter
 	public int config(OConfigItem ci) {
 
 		
+		System.out.println("registering config...");
+		
 		boolean usingDefaults = true;
 		
 		for (OConfigItem item : ci.getChildren()) {
@@ -108,6 +110,9 @@ public class Collectd2Kafka implements CollectdWriteInterface, CollectdInitInter
 				String value = item.getValues().get(0).getString();
 				if (null != value && value.trim() != "") {
 					zk_host_port = item.getValues().get(0).getString();
+					System.out.println("zk.connect:" + zk_host_port);
+					
+					
 					usingDefaults = false;
 				} else {
 					logger.info("hey using default value for zk.connect: %s",
@@ -123,6 +128,7 @@ public class Collectd2Kafka implements CollectdWriteInterface, CollectdInitInter
 				String value = item.getValues().get(0).getString();
 				if (null != value && value.trim() != "") {
 					topic = item.getValues().get(0).getString();
+					System.out.println("producer.topic:" + topic);
 					usingDefaults = false;
 				} else {
 					logger.info(
