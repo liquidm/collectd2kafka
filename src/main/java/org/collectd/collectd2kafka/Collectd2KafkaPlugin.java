@@ -120,15 +120,14 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface, CollectdIn
 		}
 
 		JsonNode json = new ObjectMapper().valueToTree(cdOut);
-
 		String jsonPayload = json.toString();
 		KeyedMessage<String, String> payload = new KeyedMessage<String, String>(topic, jsonPayload);
 		
 		if (null != getKafkaProducer()){
-			 getKafkaProducer().send(payload);
+			getKafkaProducer().send(payload);
 		}
 		else{
-			logger.warn("Could not obtain kafka Producer");
+			logger.warn("Could not obtain kafka Producer discarding payload: %s for topic: %s" + payload.message(), payload.topic());
 		}
 		
 		return 0;
