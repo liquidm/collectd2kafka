@@ -30,8 +30,7 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         CollectdInitInterface, CollectdReadInterface, CollectdWriteInterface,
         CollectdShutdownInterface {
 
-    private final Logger logger = LoggerFactory
-            .getLogger(Collectd2KafkaPlugin.class);
+    private final Logger logger = LoggerFactory.getLogger(Collectd2KafkaPlugin.class);
     private final String __DEFAULT_HOST_PORT = "localhost:2181";
     private final String __DEAFULT_TOPIC = "collectd";
 
@@ -40,14 +39,6 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
     private Producer<String, String> kafkaMessageProducer = null;
 
     public Collectd2KafkaPlugin() {
-        Collectd.registerConfig(CollectdConfigInterface.class.getSimpleName(),
-                this);
-        Collectd.registerInit(CollectdInitInterface.class.getSimpleName(), this);
-        Collectd.registerRead(CollectdReadInterface.class.getSimpleName(), this);
-        Collectd.registerWrite(CollectdWriteInterface.class.getSimpleName(),
-                this);
-        Collectd.registerShutdown(
-                CollectdShutdownInterface.class.getSimpleName(), this);
     }
 
     public int config(OConfigItem ci) {
@@ -58,8 +49,18 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
     }
 
     public int init() {
-        logger.info("Collectd2KafkaPlugin::init lifecycle", this);
-        Collectd.logInfo("Collectd2KafkaPlugin::init lifecycle");
+        logger.info("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces", this);
+        Collectd.logInfo("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces");
+        
+        Collectd.registerConfig(CollectdConfigInterface.class.getSimpleName(), this);
+        Collectd.registerInit(CollectdInitInterface.class.getSimpleName(), this);
+        Collectd.registerRead(CollectdReadInterface.class.getSimpleName(), this);
+        Collectd.registerWrite(CollectdWriteInterface.class.getSimpleName(), this);
+        Collectd.registerShutdown(CollectdShutdownInterface.class.getSimpleName(), this);
+        
+        logger.info("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!", this);
+        Collectd.logInfo("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!");
+        
         return 0;
     }
 
@@ -123,7 +124,7 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         return 0;
     }
 
-    private Producer<String, String> getKafkaProducer() {
+    protected Producer<String, String> getKafkaProducer() {
         try {
             if (null == kafkaMessageProducer) {
                 ProducerConfig config = buildDefaultProducerConfig();
@@ -136,47 +137,41 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         return kafkaMessageProducer;
     }
 
-    private ProducerConfig buildDefaultProducerConfig() {
+    protected ProducerConfig buildDefaultProducerConfig() {
         Properties props = new Properties();
         props.put("zk.connect", zookeeperHostAndPost);
         props.put("serializer.class", StringEncoder.class.getName()); // "kafka.serializer.StringEncoder"
+        //FIXME: init this property... is required!!! .. tests expose that
+        props.put("metadata.broker.list", "");
         ProducerConfig config = new ProducerConfig(props);
         return config;
     }
 
-    private void loadCollectd2KafkaPluginConfigProperties(OConfigItem ci) {
+    protected void loadCollectd2KafkaPluginConfigProperties(OConfigItem ci) {
         for (OConfigItem item : ci.getChildren()) {
             final String key = item.getKey();
-            try {
-                if (key.equalsIgnoreCase("zk.connect")) {
-                    zookeeperHostAndPost = parsePluginProperty(item, key);
-
-                } else if (key.equalsIgnoreCase("producer.topic")) {
-                    kafkaProducerTopic = parsePluginProperty(item, key);
-
+            if (key.equalsIgnoreCase("zk.connect")) {
+                if (null != item.getValues() && item.getValues().size() > 0) {
+                    zookeeperHostAndPost = item.getValues().get(0).getString();
                 }
-            } catch (Exception e) {
-                logger.info("using default value for %s: %s", key,
-                        kafkaProducerTopic);
-                Collectd.logDebug(String.format(
-                        "using default value for %s: %s", key,
-                        kafkaProducerTopic));
+                else {
+                    logger.info("using default value for %s: %s", 
+                            key,
+                            zookeeperHostAndPost);
+                }
+              
+            } else if (key.equalsIgnoreCase("producer.topic")) {
+                if (null != item.getValues() && item.getValues().size() > 0) {
+                    kafkaProducerTopic = item.getValues().get(0).getString();
+                }
+                else {
+                    logger.info("using default value for %s: %s",
+                            key,
+                            kafkaProducerTopic);
+                }
             }
         }
 
-    }
-
-    private String parsePluginProperty(OConfigItem item, String key)
-            throws Exception {
-        String value = item.getValues().get(0).getString();
-        if (null == value || value.trim() != "") {
-            logger.info("using default value for zk.connect: %s",
-                    zookeeperHostAndPost);
-            Collectd.logDebug(String.format(
-                    "using default value for zk.connect: %s",
-                    zookeeperHostAndPost));
-        }
-        return item.getValues().get(0).getString();
     }
 
 }
