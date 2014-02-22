@@ -57,11 +57,11 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         logger.info("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces", this);
         //Collectd.logInfo("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces");
         
-        Collectd.registerConfig(CollectdConfigInterface.class.getSimpleName(), this);
-        Collectd.registerInit(CollectdInitInterface.class.getSimpleName(), this);
-        Collectd.registerRead(CollectdReadInterface.class.getSimpleName(), this);
-        Collectd.registerWrite(CollectdWriteInterface.class.getSimpleName(), this);
-        Collectd.registerShutdown(CollectdShutdownInterface.class.getSimpleName(), this);
+        Collectd.registerConfig(Collectd2KafkaPlugin.class.getSimpleName(), this);
+        Collectd.registerInit(Collectd2KafkaPlugin.class.getSimpleName(), this);
+        Collectd.registerRead(Collectd2KafkaPlugin.class.getSimpleName(), this);
+        Collectd.registerWrite(Collectd2KafkaPlugin.class.getSimpleName(), this);
+        Collectd.registerShutdown(Collectd2KafkaPlugin.class.getSimpleName(), this);
         
         logger.info("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!", this);
         //Collectd.logInfo("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!");
