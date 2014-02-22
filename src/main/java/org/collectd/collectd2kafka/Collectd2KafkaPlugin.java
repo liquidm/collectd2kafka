@@ -31,13 +31,16 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         CollectdShutdownInterface {
 
     private final Logger logger = LoggerFactory.getLogger(Collectd2KafkaPlugin.class);
-    private final String __DEFAULT_HOST_PORT = "localhost:2181";
-    private final String __DEFAULT_BROKER_LIST =__DEFAULT_HOST_PORT; //FIXME: check this value
-    private final String __DEFAULT_TOPIC = "collectd";
 
-    private String zookeeperHostAndPost = __DEFAULT_HOST_PORT;
+    //private final String __DEFAULT_ZK_HOST_PORT = "localhost:2181";
+    //private String zookeeperHostAndPost = __DEFAULT_ZK_HOST_PORT;
+
+    private static final String __DEFAULT_BROKER_LIST = "localhost:9092";
+    private static final String __DEFAULT_TOPIC = "collectd";
+
     private String kafkaProducerTopic = __DEFAULT_TOPIC;
-    private String kafkaBrokerList = __DEFAULT_BROKER_LIST;
+    
+    public static Properties kafkaProducerProperties = kafkaProducerDefaultProperties();
     private Producer<String, String> kafkaMessageProducer = null;
 
     public Collectd2KafkaPlugin() {
@@ -99,7 +102,7 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
 
         JsonNode json = new ObjectMapper().valueToTree(cdOut);
         String jsonPayload = json.toString();
-        KeyedMessage<String, String> payload = new KeyedMessage<String, String>(kafkaProducerTopic, jsonPayload);
+        KeyedMessage<String, String> payload = new KeyedMessage<String, String>(kafkaProducerProperties.getProperty("producer.topic"), jsonPayload);
 
         if (null != getKafkaProducer()) {
             getKafkaProducer().send(payload);
@@ -128,21 +131,31 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
     protected Producer<String, String> getKafkaProducer() {
         try {
             if (null == kafkaMessageProducer) {
-                kafkaMessageProducer = new Producer<String, String>(getProducerConfig());
+                kafkaMessageProducer = new Producer<String, String>(getProducerConfig(kafkaProducerProperties));
             }
-
         } catch (Exception e) {
             logger.warn("Error getting kafkaProducer", e);
         }
         return kafkaMessageProducer;
     }
 
-    protected ProducerConfig getProducerConfig() {
-        ProducerConfig config = new ProducerConfig(buildProducerProperties());
+    protected Producer<String, String> getKafkaProducer(Properties props) {
+        try {
+            if (null == kafkaMessageProducer) {
+                kafkaMessageProducer = new Producer<String, String>(getProducerConfig(props));
+            }
+        } catch (Exception e) {
+            logger.warn("Error getting kafkaProducer", e);
+        }
+        return kafkaMessageProducer;
+    }
+
+    protected ProducerConfig getProducerConfig(Properties props) {
+        ProducerConfig config = new ProducerConfig(props);
         return config;
     }
 
-    protected Properties buildProducerProperties(){
+    protected static Properties kafkaProducerDefaultProperties(){
         Properties props = new Properties();
         // see http://kafka.apache.org/08/configuration.html
         /*
@@ -156,10 +169,7 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
          */
         props.put("client.id", Collectd2KafkaPlugin.class.getName()); //TODO: add host information addition in order to identify host as well
         props.put("serializer.class", StringEncoder.class.getName()); // "kafka.serializer.StringEncoder"
-        props.put("metadata.broker.list", kafkaBrokerList);
-          
-        //props.put("zk.connect", zookeeperHostAndPost); // LOOKS THAT IS ONLY FOR CONSUMERS 
-       
+        props.put("metadata.broker.list", __DEFAULT_BROKER_LIST);
         return props;
     }
     
@@ -168,22 +178,24 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
             final String key = item.getKey();
             if (key.equalsIgnoreCase("metadata.broker.list")) {
                 if (null != item.getValues() && item.getValues().size() > 0) {
-                    zookeeperHostAndPost = item.getValues().get(0).getString();
+                    String kafkaBrokerList = item.getValues().get(0).getString();
+                    kafkaProducerProperties.put("metadata.broker.list", kafkaBrokerList);
                 }
                 else {
                     logger.info("using default value for %s: %s", 
                             key,
-                            kafkaBrokerList);
+                            __DEFAULT_BROKER_LIST);
                 }
               
             } else if (key.equalsIgnoreCase("producer.topic")) {
                 if (null != item.getValues() && item.getValues().size() > 0) {
                     kafkaProducerTopic = item.getValues().get(0).getString();
+                    kafkaProducerProperties.put("producer.topic", kafkaProducerTopic);
                 }
                 else {
                     logger.info("using default value for %s: %s",
                             key,
-                            kafkaProducerTopic);
+                            __DEFAULT_TOPIC);
                 }
             }
         }

@@ -26,10 +26,12 @@ Usage
   * TODO
 
 
-Plugin Configuration Properties
+Plugin Configuration Properties (kafka Producer)
 ================================
 
- * zk.connect, e.g. zk.connect=localhost:2181
+http://kafka.apache.org/08/configuration.html
+
+ * metadata.broker.list, e.g. metadata.broker.list=localhost:9092
 
  * producer.topic, e.g. producer.topic=collectd
 

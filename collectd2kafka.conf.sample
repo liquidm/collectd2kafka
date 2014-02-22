@@ -5,7 +5,8 @@ LoadPlugin "java"
     LoadPlugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin"
     <Plugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin">
         # To be parsed by the plugin
-        zk.connect=localhost:2181
+        ## zk.connect=localhost:2181 (disabled for now)
         producer.topic=collectd
+        metadata.broker.list=localhost:9092
     </Plugin>
 </Plugin>
