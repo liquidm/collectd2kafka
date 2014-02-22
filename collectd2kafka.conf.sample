@@ -1,6 +1,7 @@
 LoadPlugin "java"
 <Plugin "java">
     JVMArg "-verbose:jni"
+    JVMArg "-Djava.class.path=/opt/collectd/lib/collectd/bindings/java"
     JVMArg "-Djava.class.path=/usr/share/collectd/java/collectd2kafka-0.0.1-LIQUIDM.jar"
     LoadPlugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin"
     <Plugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin">

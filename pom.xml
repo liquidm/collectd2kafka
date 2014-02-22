@@ -113,6 +113,13 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                          <artifactSet>
+                            <excludes>
+                              <exclude>org.collectd2kafka:*</exclude>
+                            </excludes>
+                          </artifactSet>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

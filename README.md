@@ -9,7 +9,7 @@ Description
 Build Requirements
 ================================
 
-  * collectd: https://collectd.org
+  * collectd: https://collectd.org (http://collectd.org/documentation/manpages/collectd-java.5.shtml#name)
 
   * Apache Maven: http://maven.apache.org
 
