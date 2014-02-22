@@ -5,67 +5,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 import kafka.serializer.StringEncoder;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.collectd.api.Collectd;
 import org.collectd.api.CollectdConfigInterface;
-import org.collectd.api.CollectdInitInterface;
 import org.collectd.api.CollectdReadInterface;
 import org.collectd.api.CollectdShutdownInterface;
 import org.collectd.api.CollectdWriteInterface;
 import org.collectd.api.DataSource;
 import org.collectd.api.OConfigItem;
 import org.collectd.api.ValueList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Collectd2KafkaPlugin implements CollectdConfigInterface,
-        CollectdInitInterface, CollectdReadInterface, CollectdWriteInterface,
-        CollectdShutdownInterface {
+                                        CollectdReadInterface,
+                                        CollectdWriteInterface,
+                                        CollectdShutdownInterface {
 
     private final Logger logger = LoggerFactory.getLogger(Collectd2KafkaPlugin.class);
 
-    //private final String __DEFAULT_ZK_HOST_PORT = "localhost:2181";
-    //private String zookeeperHostAndPost = __DEFAULT_ZK_HOST_PORT;
-
     private static final String __DEFAULT_BROKER_LIST = "localhost:9092";
     private static final String __DEFAULT_TOPIC = "collectd";
-
     private String kafkaProducerTopic = __DEFAULT_TOPIC;
-    
-    public static Properties kafkaProducerProperties = kafkaProducerDefaultProperties();
+    public static Properties kafkaProducerProperties = null;
     private Producer<String, String> kafkaMessageProducer = null;
 
-    public Collectd2KafkaPlugin() {
+    public Collectd2KafkaPlugin(){
+      Collectd.registerConfig   ("Collectd2KafkaPlugin", this);
+      Collectd.registerRead     ("Collectd2KafkaPlugin", this);
+      Collectd.registerWrite("Collectd2KafkaPlugin", this);
+      Collectd.registerShutdown ("Collectd2KafkaPlugin", this);
+
+      kafkaProducerProperties = kafkaProducerDefaultProperties();
     }
 
     public int config(OConfigItem ci) {
         logger.info("Collectd2KafkaPlugin::config lifecycle", this);
-        //Collectd.logInfo("Collectd2KafkaPlugin::config lifecycle");
         loadCollectd2KafkaPluginConfigProperties(ci);
-        return 0;
-    }
-
-    public int init() {
-        logger.info("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces", this);
-        //Collectd.logInfo("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces");
-        
-        Collectd.registerConfig(Collectd2KafkaPlugin.class.getSimpleName(), this);
-        Collectd.registerInit(Collectd2KafkaPlugin.class.getSimpleName(), this);
-        Collectd.registerRead(Collectd2KafkaPlugin.class.getSimpleName(), this);
-        Collectd.registerWrite(Collectd2KafkaPlugin.class.getSimpleName(), this);
-        Collectd.registerShutdown(Collectd2KafkaPlugin.class.getSimpleName(), this);
-        
-        logger.info("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!", this);
-        //Collectd.logInfo("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!");
-        
+        //Collectd.logInfo("Collectd2KafkaPlugin::config lifecycle");
         return 0;
     }
 
@@ -87,38 +70,8 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
                             + payload.message(), payload.topic());
         }
 
-        return 0;
+        return Collectd.dispatchValues (vl);
 
-    }
-
-    private Map<String, String> collectd2kafkaMessageBuilder(ValueList vl) {
-        List<DataSource> ds = vl.getDataSet().getDataSources();
-        List<Number> values = vl.getValues();
-        int size = values.size();
-        String plugin = vl.getPlugin();
-        String type = vl.getType();
-        String pluginInstance = vl.getPluginInstance();
-        String typeInstance = vl.getTypeInstance();
-
-        Map<String, String> cdOut = new HashMap<String, String>();
-        if (plugin != null && !plugin.isEmpty()) {
-            cdOut.put("plugin", plugin);
-            if (pluginInstance != null && !pluginInstance.isEmpty())
-                cdOut.put("instance", pluginInstance);
-            if (type != null && !type.isEmpty())
-                cdOut.put("type", type);
-            if (typeInstance != null && !typeInstance.isEmpty())
-                cdOut.put("type_instance", typeInstance);
-        }
-        long time = vl.getTime() / 1000L;
-        cdOut.put("time", String.valueOf(time));
-        cdOut.put("host", vl.getHost());
-        for (int x = 0; x < size; x++) {
-            String pointName = ((DataSource) ds.get(x)).getName();
-            if (!pointName.equals("value"))
-                cdOut.put("value_name", pointName);
-        }
-        return cdOut;
     }
 
     public int read() {
@@ -212,6 +165,36 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
             }
         }
 
+    }
+
+    private Map<String, String> collectd2kafkaMessageBuilder(ValueList vl) {
+        List<DataSource> ds = vl.getDataSet().getDataSources();
+        List<Number> values = vl.getValues();
+        int size = values.size();
+        String plugin = vl.getPlugin();
+        String type = vl.getType();
+        String pluginInstance = vl.getPluginInstance();
+        String typeInstance = vl.getTypeInstance();
+
+        Map<String, String> cdOut = new HashMap<String, String>();
+        if (plugin != null && !plugin.isEmpty()) {
+            cdOut.put("plugin", plugin);
+            if (pluginInstance != null && !pluginInstance.isEmpty())
+                cdOut.put("instance", pluginInstance);
+            if (type != null && !type.isEmpty())
+                cdOut.put("type", type);
+            if (typeInstance != null && !typeInstance.isEmpty())
+                cdOut.put("type_instance", typeInstance);
+        }
+        long time = vl.getTime() / 1000L;
+        cdOut.put("time", String.valueOf(time));
+        cdOut.put("host", vl.getHost());
+        for (int x = 0; x < size; x++) {
+            String pointName = ((DataSource) ds.get(x)).getName();
+            if (!pointName.equals("value"))
+                cdOut.put("value_name", pointName);
+        }
+        return cdOut;
     }
 
 }
