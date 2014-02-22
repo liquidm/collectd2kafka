@@ -48,14 +48,14 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
 
     public int config(OConfigItem ci) {
         logger.info("Collectd2KafkaPlugin::config lifecycle", this);
-        Collectd.logInfo("Collectd2KafkaPlugin::config lifecycle");
+        //Collectd.logInfo("Collectd2KafkaPlugin::config lifecycle");
         loadCollectd2KafkaPluginConfigProperties(ci);
         return 0;
     }
 
     public int init() {
         logger.info("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces", this);
-        Collectd.logInfo("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces");
+        //Collectd.logInfo("Collectd2KafkaPlugin::init starts.. registering lifecycle interfaces");
         
         Collectd.registerConfig(CollectdConfigInterface.class.getSimpleName(), this);
         Collectd.registerInit(CollectdInitInterface.class.getSimpleName(), this);
@@ -64,14 +64,14 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         Collectd.registerShutdown(CollectdShutdownInterface.class.getSimpleName(), this);
         
         logger.info("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!", this);
-        Collectd.logInfo("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!");
+        //Collectd.logInfo("Collectd2KafkaPlugin::init ends.. registering lifecycle interfaces done!!");
         
         return 0;
     }
 
     public int write(ValueList vl) {
         logger.info("Collectd2KafkaPlugin::write lifecycle", this);
-        Collectd.logInfo("Collectd2KafkaPlugin::write lifecycle");
+        //Collectd.logInfo("Collectd2KafkaPlugin::write lifecycle");
 
         Map<String, String> cdOut = collectd2kafkaMessageBuilder(vl);
 
@@ -123,13 +123,13 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
 
     public int read() {
         logger.info("Collectd2KafkaPlugin::read lifecycle", this);
-        Collectd.logInfo("Collectd2KafkaPlugin::read lifecycle");
+        //Collectd.logInfo("Collectd2KafkaPlugin::read lifecycle");
         return 0;
     }
 
     public int shutdown() {
         logger.info("Collectd2KafkaPlugin::shutdown lifecycle", this);
-        Collectd.logInfo("Collectd2KafkaPlugin::shutdown lifecycle");
+        //Collectd.logInfo("Collectd2KafkaPlugin::shutdown lifecycle");
         return 0;
     }
 

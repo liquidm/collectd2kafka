@@ -30,7 +30,7 @@ public class Collectd2KafkaPluginIntegrationTest {
      * should fail where jni can not load native code
      */
     @Test
-    @Ignore
+    //@Ignore
     public void init() {
        plugin.init();
     }
