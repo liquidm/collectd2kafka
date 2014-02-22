@@ -1,10 +1,11 @@
 LoadPlugin "java"
 <Plugin "java">
-	JVMArg "-verbose:jni"
-	JVMArg "-Djava.class.path=/usr/share/collectd/java/collectd2kafka-0.0.1-LIQUIDM.jar"
-	LoadPlugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin"
-	<Plugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin">
-		zk.connect=localhost:2181
-		producer.topic=collectd
-	</Plugin>
+    JVMArg "-verbose:jni"
+    JVMArg "-Djava.class.path=/usr/share/collectd/java/collectd2kafka-0.0.1-LIQUIDM.jar"
+    LoadPlugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin"
+    <Plugin "org.collectd.collectd2kafka.Collectd2KafkaPlugin">
+        # To be parsed by the plugin
+        zk.connect=localhost:2181
+        producer.topic=collectd
+    </Plugin>
 </Plugin>

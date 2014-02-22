@@ -1,4 +1,4 @@
-package Collectd2KafkaPlugin;
+package org.collectd.collectd2kafka;
 
 import org.junit.Ignore;
 import org.junit.Test;

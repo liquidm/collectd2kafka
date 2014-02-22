@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.collectd2kafka</groupId>
+  <artifactId>collectd-api</artifactId>
+  <versioning>
+    <release>0.0.1-LIQUIDM</release>
+    <versions>
+      <version>0.0.1-LIQUIDM</version>
+    </versions>
+    <lastUpdated>20140222135708</lastUpdated>
+  </versioning>
+</metadata>
