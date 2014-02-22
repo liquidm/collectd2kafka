@@ -15,16 +15,14 @@ Build Requirements
 
   * Apache Kafka 0.8.0 http://kafka.apache.org
 
-Build
-================================
-
-  * sh build.sh
-
 Usage
 ================================
 
-  * TODO
+  * mvn clean install
 
+  * mvn clean install -DskipTests=false (run build with integration tests included)
+
+  * sh build.sh (refreshes the non managed maven libraries from libs/* into local repo as defined on build script)
 
 Plugin Configuration Properties (kafka Producer)
 ================================
