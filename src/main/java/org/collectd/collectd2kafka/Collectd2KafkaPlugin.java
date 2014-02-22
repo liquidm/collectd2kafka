@@ -32,10 +32,12 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
 
     private final Logger logger = LoggerFactory.getLogger(Collectd2KafkaPlugin.class);
     private final String __DEFAULT_HOST_PORT = "localhost:2181";
-    private final String __DEAFULT_TOPIC = "collectd";
+    private final String __DEFAULT_BROKER_LIST =__DEFAULT_HOST_PORT; //FIXME: check this value
+    private final String __DEFAULT_TOPIC = "collectd";
 
     private String zookeeperHostAndPost = __DEFAULT_HOST_PORT;
-    private String kafkaProducerTopic = __DEAFULT_TOPIC;
+    private String kafkaProducerTopic = __DEFAULT_TOPIC;
+    private String kafkaBrokerList = __DEFAULT_BROKER_LIST;
     private Producer<String, String> kafkaMessageProducer = null;
 
     public Collectd2KafkaPlugin() {
@@ -97,8 +99,7 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
 
         JsonNode json = new ObjectMapper().valueToTree(cdOut);
         String jsonPayload = json.toString();
-        KeyedMessage<String, String> payload = new KeyedMessage<String, String>(
-                kafkaProducerTopic, jsonPayload);
+        KeyedMessage<String, String> payload = new KeyedMessage<String, String>(kafkaProducerTopic, jsonPayload);
 
         if (null != getKafkaProducer()) {
             getKafkaProducer().send(payload);
@@ -127,8 +128,7 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
     protected Producer<String, String> getKafkaProducer() {
         try {
             if (null == kafkaMessageProducer) {
-                ProducerConfig config = buildDefaultProducerConfig();
-                kafkaMessageProducer = new Producer<String, String>(config);
+                kafkaMessageProducer = new Producer<String, String>(getProducerConfig());
             }
 
         } catch (Exception e) {
@@ -137,27 +137,43 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         return kafkaMessageProducer;
     }
 
-    protected ProducerConfig buildDefaultProducerConfig() {
-        Properties props = new Properties();
-        props.put("zk.connect", zookeeperHostAndPost);
-        props.put("serializer.class", StringEncoder.class.getName()); // "kafka.serializer.StringEncoder"
-        //FIXME: init this property... is required!!! .. tests expose that
-        props.put("metadata.broker.list", "");
-        ProducerConfig config = new ProducerConfig(props);
+    protected ProducerConfig getProducerConfig() {
+        ProducerConfig config = new ProducerConfig(buildProducerProperties());
         return config;
     }
 
+    protected Properties buildProducerProperties(){
+        Properties props = new Properties();
+        // see http://kafka.apache.org/08/configuration.html
+        /*
+            metadata.broker.list    => no default (required)
+            request.required.acks   => default to 0
+            producer.type   => default to sync
+            serializer.class => default to kafka.serializer.DefaultEncoder The serializer class for messages. The default encoder takes a byte[] and returns the same byte[].
+            client.id => defaults to ""  The client id is a user-specified string sent in each request to help trace calls. 
+                         It should logically identify the application making the request.
+
+         */
+        props.put("client.id", Collectd2KafkaPlugin.class.getName()); //TODO: add host information addition in order to identify host as well
+        props.put("serializer.class", StringEncoder.class.getName()); // "kafka.serializer.StringEncoder"
+        props.put("metadata.broker.list", kafkaBrokerList);
+          
+        //props.put("zk.connect", zookeeperHostAndPost); // LOOKS THAT IS ONLY FOR CONSUMERS 
+       
+        return props;
+    }
+    
     protected void loadCollectd2KafkaPluginConfigProperties(OConfigItem ci) {
         for (OConfigItem item : ci.getChildren()) {
             final String key = item.getKey();
-            if (key.equalsIgnoreCase("zk.connect")) {
+            if (key.equalsIgnoreCase("metadata.broker.list")) {
                 if (null != item.getValues() && item.getValues().size() > 0) {
                     zookeeperHostAndPost = item.getValues().get(0).getString();
                 }
                 else {
                     logger.info("using default value for %s: %s", 
                             key,
-                            zookeeperHostAndPost);
+                            kafkaBrokerList);
                 }
               
             } else if (key.equalsIgnoreCase("producer.topic")) {

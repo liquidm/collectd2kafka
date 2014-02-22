@@ -32,7 +32,7 @@ public class Collectd2KafkaPluginTest {
 
     @Test
     public void producerConfigDefault() {
-        ProducerConfig config = plugin.buildDefaultProducerConfig();
+        ProducerConfig config = plugin.getProducerConfig();
         assertNotNull(config);
     }
 
