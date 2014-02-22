@@ -129,6 +129,13 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
 
     public int shutdown() {
         logger.info("Collectd2KafkaPlugin::shutdown lifecycle", this);
+        if(null != kafkaMessageProducer) {
+            try {
+                kafkaMessageProducer.close();
+            }catch(Exception e){
+                logger.warn("exception with kafka producer client shutdown", e);
+            }
+        }
         //Collectd.logInfo("Collectd2KafkaPlugin::shutdown lifecycle");
         return 0;
     }
