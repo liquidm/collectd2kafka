@@ -73,6 +73,25 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
         logger.info("Collectd2KafkaPlugin::write lifecycle", this);
         Collectd.logInfo("Collectd2KafkaPlugin::write lifecycle");
 
+        Map<String, String> cdOut = collectd2kafkaMessageBuilder(vl);
+
+        JsonNode json = new ObjectMapper().valueToTree(cdOut);
+        String jsonPayload = json.toString();
+        KeyedMessage<String, String> payload = new KeyedMessage<String, String>(kafkaProducerProperties.getProperty("producer.topic"), jsonPayload);
+
+        if (null != getKafkaProducer()) {
+            getKafkaProducer().send(payload);
+        } else {
+            logger.warn(
+                    "Could not obtain kafka Producer discarding payload: %s for topic: %s"
+                            + payload.message(), payload.topic());
+        }
+
+        return 0;
+
+    }
+
+    private Map<String, String> collectd2kafkaMessageBuilder(ValueList vl) {
         List<DataSource> ds = vl.getDataSet().getDataSources();
         List<Number> values = vl.getValues();
         int size = values.size();
@@ -99,21 +118,7 @@ public class Collectd2KafkaPlugin implements CollectdConfigInterface,
             if (!pointName.equals("value"))
                 cdOut.put("value_name", pointName);
         }
-
-        JsonNode json = new ObjectMapper().valueToTree(cdOut);
-        String jsonPayload = json.toString();
-        KeyedMessage<String, String> payload = new KeyedMessage<String, String>(kafkaProducerProperties.getProperty("producer.topic"), jsonPayload);
-
-        if (null != getKafkaProducer()) {
-            getKafkaProducer().send(payload);
-        } else {
-            logger.warn(
-                    "Could not obtain kafka Producer discarding payload: %s for topic: %s"
-                            + payload.message(), payload.topic());
-        }
-
-        return 0;
-
+        return cdOut;
     }
 
     public int read() {
