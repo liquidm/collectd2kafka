@@ -1,6 +1,6 @@
 import collectd
 import random
-from json import JSONEncoder as json_enc
+import json 
 from kafka.client import KafkaClient
 from kafka.producer import SimpleProducer
 
@@ -15,18 +15,24 @@ def config_callback(conf):
         elif node.key == 'Topic':
             topic = node.values[0]
 
-def read_callback(data=None):
-    vl = collectd.Values(type='gauge')
-    vl.plugin = 'collecd2kafka'
-    vl.dispatch(values=[random.random() * 100])
-
-def write_callback(vl, data=None):
-    for x in vl.values:
-        jdata = json_enc().encode({vl.plugin : [str(vl.type), str(x)]})
-        producer.send_messages("collectd", jdata)
-
 collectd.register_config(config_callback);
+
+def write_callback(v, data=None):
+    metric = {}
+    metric['host'] = v.host
+    metric['plugin'] = v.plugin
+    metric['plugin_instance'] = v.plugin_instance
+    metric['type'] = v.type
+    metric['type_instance'] = v.type_instance
+    metric['time'] = v.time
+    metric['interval'] = v.interval
+    metric['values'] = []
+
+    for value in v.values:
+        metric['values'].append(value)
+
+    producer.send_messages("collectd", json.dumps(metric))
+
 kafka = KafkaClient(brokers)
 producer = SimpleProducer(kafka)
-collectd.register_read(read_callback);
 collectd.register_write(write_callback);
